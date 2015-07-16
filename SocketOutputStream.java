@@ -1,10 +1,12 @@
+package net;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.net.SocketTimeoutException;
 
 
-public class SocketOutputStream extends OutputStream {
+class SocketOutputStream extends OutputStream {
 
 	private int i;
 	public final int length;
@@ -26,18 +28,20 @@ public class SocketOutputStream extends OutputStream {
 		byte[] buffer = packet.getData();
 		i++;
 		buffer[i] = (byte) b;
-		if(i >= buffer.length - 1) {
+		if(i >= length - 1) {
 			this.flush(); // send
 		}
 	}
 
 	@Override
 	public void flush() throws IOException {
+		int t = 0;
 		if(i == 0){ return; }
 		byte[] buffer = packet.getData();
+		System.out.print("sending..");
 		do{
 			try {
-				System.out.print("sending...");
+				System.out.print(".");
 				buffer[0] = part; // set header
 				if(!master.random()) {
 					packet.setLength(i+1);
@@ -48,6 +52,7 @@ public class SocketOutputStream extends OutputStream {
 			} catch(SocketTimeoutException e) { // no confirmation
 				buffer[0] = -128; // continue
 			}
+			master.isConnected(t++);
 		}while(buffer[0] < part);
 		System.out.println(" sent: " + (int) buffer[0]);
 		java.util.Arrays.fill(buffer, (byte) 0);
@@ -60,3 +65,4 @@ public class SocketOutputStream extends OutputStream {
 		master.close();
 	}
 }
+
