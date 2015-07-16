@@ -1,7 +1,9 @@
+package main;
+import net.*;
 
 public class Server {
 	public final static int port = 23456, bufferSize = 1025;
-	public final static int lossProbability = 0;
+	public final static int lossProbability = 50;
 	
 	public static void main(String[] arguments) throws Exception {
 		MyServerSocket welcomeSocket = new MyServerSocket(port, lossProbability, bufferSize);
@@ -15,7 +17,6 @@ public class Server {
 				HttpRequest request = new HttpRequest(connectionSocket);
 				Thread thread = new Thread(request);
 				thread.start();
-				thread.join(); ///////////////////////////
 			}
 		} finally {
 			welcomeSocket.close();			
