@@ -1,47 +1,62 @@
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.SocketException;
 
 public class MySocket implements java.io.Closeable {
 
-	private final int prob;
-	final InetSocketAddress address;
+	final DatagramSocket socket;
+	private final int probability;
+	final SocketAddress address;
 	private final int bufferSize;
 
-	public final InputStream in;
-	public final OutputStream out;
+	private final InputStream in;
+	private final OutputStream out;
 
 
-	public MySocket(InetAddress address, int port, int prob, int bufferSize) 
-	throws SocketException {
-		this(new InetSocketAddress(address, port), prob, bufferSize);
+	public MySocket(InetAddress destAddress, int destPort, int probability, int bufferSize) 
+			throws SocketException, IOException {
+		this(new InetSocketAddress(destAddress, destPort), probability, bufferSize, true);
 	}
 	
-	public MySocket(InetSocketAddress address, int prob, int bufferSize)
-			throws java.net.SocketException {
+	public MySocket(SocketAddress destAddress, int probability, int bufferSize) 
+			throws SocketException, IOException{
+		this(destAddress, probability, bufferSize, true);
+	}
+	
+	MySocket(SocketAddress destAddress, int probability, int bufferSize, boolean receive)
+			throws SocketException, IOException {
 		this.bufferSize = bufferSize;
-		this.address = address;
-		this.prob = prob;
-		DatagramSocket socket = new DatagramSocket(address.getPort());
-		socket.connect(address);
-		this.in = new SocketInputStream(socket, new DatagramPacket(
-				new byte[bufferSize], bufferSize, address));
-		this.out = new SocketOutputStream(socket, new DatagramPacket(
-				new byte[bufferSize], bufferSize, address));
+		this.address = destAddress;
+		this.probability = probability;
+
+		this.socket = new DatagramSocket();
+		DatagramPacket temp = new DatagramPacket(new byte[2], 1, destAddress);
+		
+		socket.send(temp);
+		if(receive) { socket.receive(temp);	}
+		this.in = new SocketInputStream(this);
+		this.out = new SocketOutputStream(this);
+	}
+	
+	public void setSoTimeout(int time) throws SocketException {
+		socket.setSoTimeout(time);
 	}
 
 	public void close() throws java.io.IOException {
-		in.close();
-		out.close();
+		socket.close();
 	}
 
-	private boolean random() {
+	boolean random() {
 		int rand = new java.util.Random().nextInt(100);
-		return rand <= this.prob;
+		return rand < this.probability;
+	}
+	
+	public SocketAddress getSocketAddress() {
+		return address;
 	}
 
 	public InputStream getInputStream() {
@@ -52,7 +67,7 @@ public class MySocket implements java.io.Closeable {
 		return out;
 	}
 
-	public DatagramPacket newPacket() {
+	DatagramPacket newPacket() {
 		return new DatagramPacket(new byte[bufferSize], bufferSize, address);
 	}
 
