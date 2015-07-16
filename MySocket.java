@@ -1,3 +1,5 @@
+package net;
+
 import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -5,9 +7,12 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 
 public class MySocket implements java.io.Closeable {
 
+	static public final int SO_TIMEOUT = 300, TRY_NUMBER = 20;	
+	
 	final DatagramSocket socket;
 	final SocketAddress address;
 	private final int probability, bufferSize;
@@ -29,14 +34,24 @@ public class MySocket implements java.io.Closeable {
 	MySocket(SocketAddress destAddress, int probability, int bufferSize, boolean receive)
 			throws SocketException, IOException {
 		this.bufferSize = bufferSize;
-		this.address = destAddress;
 		this.probability = probability;
 
 		this.socket = new DatagramSocket();
-		DatagramPacket temp = new DatagramPacket(new byte[2], 1, destAddress);
+		socket.setSoTimeout(SO_TIMEOUT);
 		
-		socket.send(temp);
-		if(receive) { socket.receive(temp);	}
+		DatagramPacket temp = new DatagramPacket(new byte[2], 1, destAddress);
+		while(true) {
+			try {
+				socket.send(temp);
+				if(receive) { 
+					socket.receive(temp);	
+					destAddress = temp.getSocketAddress();		
+				}
+				break;
+			} catch(SocketTimeoutException e) {}
+		}
+		socket.setSoTimeout(SO_TIMEOUT);
+		this.address = destAddress;
 		this.in = new SocketInputStream(this);
 		this.out = new SocketOutputStream(this);
 	}
@@ -45,6 +60,7 @@ public class MySocket implements java.io.Closeable {
 		socket.setSoTimeout(time);
 	}
 
+	@Override
 	public void close() throws java.io.IOException {
 		socket.close();
 	}
@@ -68,6 +84,19 @@ public class MySocket implements java.io.Closeable {
 
 	DatagramPacket newPacket() {
 		return new DatagramPacket(new byte[bufferSize], bufferSize, address);
+	}
+
+	public void isConnected(int t) throws IOException {
+		if(t > TRY_NUMBER) {
+			System.out.println(" canceled.");
+			throw new IOException("Cannot reach");
+		}
+	}
+	
+	@Override
+	protected void finalize() throws Throwable {
+		close();
+		super.finalize();
 	}
 
 }
