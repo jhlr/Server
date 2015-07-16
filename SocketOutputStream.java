@@ -1,46 +1,62 @@
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
+import java.net.SocketTimeoutException;
 
 
 public class SocketOutputStream extends OutputStream {
+
 	private int i;
-	private final DatagramSocket socket;
+	public final int length;
+	private byte part;
+	private final MySocket master;
 	private final DatagramPacket packet;
-	
-	public SocketOutputStream(DatagramSocket socket, DatagramPacket packet) {
+
+	public SocketOutputStream(MySocket master) {
 		super();
-		this.packet = packet;
-		this.socket = socket;
+		this.packet = master.newPacket();
 		i = 0;
+		part = -127;
+		this.master = master;
+		this.length = packet.getLength();
 	}
-	
+
 	@Override
 	public void write(int b) throws IOException {
 		byte[] buffer = packet.getData();
 		i++;
 		buffer[i] = (byte) b;
 		if(i >= buffer.length - 1) {
-			this.flush();
+			this.flush(); // send
 		}
 	}
-	
+
 	@Override
 	public void flush() throws IOException {
-		// packet.getData()[0] = 
-		socket.send(packet);
+		if(i == 0){ return; }
+		byte[] buffer = packet.getData();
+		do{
+			try {
+				System.out.print("sending...");
+				buffer[0] = part; // set header
+				if(!master.random()) {
+					packet.setLength(i+1);
+					master.socket.send(packet); // send the packet
+				}
+				packet.setLength(1);
+				master.socket.receive(packet);
+			} catch(SocketTimeoutException e) { // no confirmation
+				buffer[0] = -128; // continue
+			}
+		}while(buffer[0] < part);
+		System.out.println(" sent: " + (int) buffer[0]);
+		java.util.Arrays.fill(buffer, (byte) 0);
+		part++;
 		i = 0;
 	}
-	
+
 	@Override
 	public void close() throws IOException {
-		socket.close();
-	}
-	
-	@Override
-	protected void finalize() throws Throwable {
-		this.close();
-		super.finalize();
+		master.close();
 	}
 }
