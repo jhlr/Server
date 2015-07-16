@@ -1,4 +1,6 @@
+package main;
 import java.io.*;
+import net.*;
 import java.util.StringTokenizer;
 
 public class HttpRequest implements Runnable {
@@ -36,12 +38,11 @@ public class HttpRequest implements Runnable {
 	}
 	
 	// Implement the run() method of the Runnable interface.
-	public void run() {
+	public void run(){
 		try {
 			processRequest();
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.exit(100);
 		}
 	}
 
@@ -50,7 +51,7 @@ public class HttpRequest implements Runnable {
 		// Get a reference to the socket's input and output streams.
 		InputStream is = this.socket.getInputStream();
 		DataOutputStream os = new DataOutputStream(this.socket.getOutputStream());
-
+		
 		// Set up input stream filters
 		BufferedReader br = new BufferedReader(new InputStreamReader(is));
 
@@ -79,7 +80,7 @@ public class HttpRequest implements Runnable {
 		FileInputStream fis = null;
 		boolean fileExists = true;
 		try {
-			fis= new FileInputStream(fileName);
+			fis = new FileInputStream(fileName);
 		} catch (FileNotFoundException e) {
 			fileExists = false;
 		}
