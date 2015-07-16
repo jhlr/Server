@@ -1,91 +1,69 @@
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-
+import java.net.SocketTimeoutException;
 
 public class SocketInputStream extends InputStream {
 	private int i;
-	private final DatagramSocket socket;
+	private byte part;
+	public final int length;
+	
 	private final DatagramPacket packet;
+	private final MySocket master;
 	
-	private byte[] markBuffer;
-	private int j;
-	private boolean reset;
-	private int markBufferMax;
-	
-	public SocketInputStream(DatagramSocket socket, DatagramPacket packet) {
+	public SocketInputStream(MySocket master) {
 		super();
-		this.packet = packet;
-		this.socket = socket;
-		markBuffer = null;
-		reset = false;
+		this.packet = master.newPacket();
 		i = packet.getLength();
+		this.length = packet.getLength();
+		part = -127;
+		this.master = master;
 	}
 	
 	@Override
 	public int read() throws IOException {
-		if(reset) {
-			if(j >= markBufferMax) {
-				reset = false;
-				byte result = markBuffer[j];
-				markBuffer = null;
-				return result;
-			}
-			j++;
-			return markBuffer[j];
-		}
-		
 		byte[] buffer = packet.getData();
 		if(i >= packet.getLength()-1) {
-			socket.receive(packet);
-			// buffer[0] is the header
+			java.util.Arrays.fill(buffer, (byte) 0);
+			do{
+				try {
+					System.out.print("receiving...");
+					packet.setLength(length);
+					master.socket.receive(packet);
+					// Confirmation
+					if(master.random()) {
+						packet.setLength(1); // No need to send the whole packet back
+						master.socket.send(packet);
+					}
+				} catch (SocketTimeoutException e) { // did not receive anything
+					buffer[0] = -128; // continue
+				}
+			}while(buffer[0] < part); // Maybe the confirmation was not received in a previous packet
+			System.out.println(" received: " + (int) buffer[0]);
+			part++;
 			i = 0;
 		}
 		i++;
-		if(markBuffer != null) {
-			if(j < markBuffer.length) {
-				markBuffer[j] = buffer[i];
-				j++;
-			} else {
-				markBuffer = null;
-				j = 0;
-			}
-		}
 		return buffer[i];
 	}
 	
 	@Override
 	public int available() throws IOException {
-		return packet.getLength() - i - 1;
+		return packet.getLength() - i;
 	}
 	
 	@Override
 	public synchronized void mark(int readlimit) {
-		markBuffer = new byte[readlimit];
-		markBufferMax = 0;
-		j = 0;
-		reset = false;
+		throw new UnsupportedOperationException();
 	}
 	
 	@Override
-	public boolean markSupported() { return true; }
-	
-	@Override
 	public synchronized void reset() throws IOException {
-		markBufferMax = j - 1;
-		j = -1;
-		reset = true;
+		throw new UnsupportedOperationException();
 	}
 	
 	@Override
 	public void close() throws IOException {
-		socket.close();
-	}
-	
-	@Override
-	protected void finalize() throws Throwable {
-		this.close();
-		super.finalize();
+		master.close();
 	}
 }
