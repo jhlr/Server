@@ -9,9 +9,8 @@ import java.net.SocketException;
 public class MySocket implements java.io.Closeable {
 
 	final DatagramSocket socket;
-	private final int probability;
 	final SocketAddress address;
-	private final int bufferSize;
+	private final int probability, bufferSize;
 
 	private final InputStream in;
 	private final OutputStream out;
