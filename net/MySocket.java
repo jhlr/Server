@@ -11,7 +11,7 @@ import java.net.SocketTimeoutException;
 
 public class MySocket implements java.io.Closeable {
 
-	static public final int SO_TIMEOUT = 300, TRY_NUMBER = 20;	
+	static public final int SO_TIMEOUT = 5, TRY_NUMBER = 20;	
 	
 	final DatagramSocket socket;
 	final SocketAddress address;
@@ -19,7 +19,6 @@ public class MySocket implements java.io.Closeable {
 
 	private final InputStream in;
 	private final OutputStream out;
-
 
 	public MySocket(InetAddress destAddress, int destPort, int probability, int bufferSize) 
 			throws SocketException, IOException {
@@ -37,20 +36,23 @@ public class MySocket implements java.io.Closeable {
 		this.probability = probability;
 
 		this.socket = new DatagramSocket();
-		socket.setSoTimeout(SO_TIMEOUT);
 		
+		socket.setSoTimeout(SO_TIMEOUT << 2);
 		DatagramPacket temp = new DatagramPacket(new byte[2], 1, destAddress);
-		while(true) {
+		for(int i=0; i<TRY_NUMBER; i++) {
+			if(!random()) { // connection byte may be lost
+				socket.send(temp);			
+			}
 			try {
-				socket.send(temp);
-				if(receive) { 
+				if(receive) {
 					socket.receive(temp);	
-					destAddress = temp.getSocketAddress();		
+					destAddress = temp.getSocketAddress();	
 				}
-				break;
-			} catch(SocketTimeoutException e) {}
+				i = TRY_NUMBER;
+			} catch (SocketTimeoutException e) {}
 		}
 		socket.setSoTimeout(SO_TIMEOUT);
+		
 		this.address = destAddress;
 		this.in = new SocketInputStream(this);
 		this.out = new SocketOutputStream(this);
@@ -85,12 +87,10 @@ public class MySocket implements java.io.Closeable {
 	DatagramPacket newPacket() {
 		return new DatagramPacket(new byte[bufferSize], bufferSize, address);
 	}
-
-	public void isConnected(int t) throws IOException {
-		if(t > TRY_NUMBER) {
-			System.out.println(" canceled.");
-			throw new IOException("Cannot reach");
-		}
+	
+	void unreachable() throws IOException {
+		System.out.println(" canceled.");
+		throw new IOException("Unreachable");
 	}
 	
 	@Override
