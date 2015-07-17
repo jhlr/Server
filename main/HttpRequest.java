@@ -41,6 +41,8 @@ public class HttpRequest implements Runnable {
 	public void run(){
 		try {
 			processRequest();
+		} catch (NullPointerException e) {
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -64,7 +66,7 @@ public class HttpRequest implements Runnable {
 
 		// Get and display the header lines.
 		String headerLine = null;
-		while ((headerLine = br.readLine()) != null && headerLine.length() != 0) {
+		while ((headerLine = br.readLine()) != null && headerLine.length() > 0) {
 			System.out.println(headerLine);
 		}
 
