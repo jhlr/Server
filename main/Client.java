@@ -1,5 +1,8 @@
 package main;
 import net.*;
+
+import java.io.File;
+import java.io.FileReader;
 import java.io.PrintStream;
 import java.net.InetAddress;
 import java.util.Scanner;
@@ -7,7 +10,8 @@ import java.util.Scanner;
 public class Client {
 	public final static int bufferSize = 1025, serverPort = 23456, lossProbability = 50;
 	public final static byte[] serverAdress = {(byte)192, (byte)168, (byte)1, (byte)101};
-
+	public final static String filename = "./GET.txt";
+	
 	public static void main(String[] args) throws Exception {
 		MySocket socket = new MySocket(
 				InetAddress.getByName("localhost"), serverPort, lossProbability, bufferSize);
@@ -18,7 +22,7 @@ public class Client {
 
 		PrintStream serverOut = new PrintStream(socket.getOutputStream());
 		Scanner serverIn = new Scanner(socket.getInputStream());
-		Scanner sc = new Scanner(System.in);
+		Scanner sc = new Scanner(new FileReader(new File(filename)));
 		try {
 			while(sc.hasNextLine()){
 				serverOut.println(sc.nextLine()); // send something
