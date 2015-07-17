@@ -40,10 +40,10 @@ class SocketInputStream extends InputStream {
 		int t = 0;
 		byte[] buffer = packet.getData();
 		java.util.Arrays.fill(buffer, (byte) 0);
-		System.out.print("receiving..");
+		if(MySocket.DEBUG) System.out.print("receiving..");
 		do{
 			try {
-				System.out.print(".");
+				if(MySocket.DEBUG) System.out.print(".");
 				master.socket.receive(packet);
 				// Confirmation
 				if(!master.random()) {
@@ -58,7 +58,7 @@ class SocketInputStream extends InputStream {
 				master.unreachable();
 			}
 		}while(buffer[0] < part); // Maybe the confirmation was not received in a previous packet
-		System.out.println(" received: " + (127 + (int) buffer[0]));
+		if(MySocket.DEBUG) System.out.println(" received: " + (127 + (int) buffer[0]));
 		for(i=length-1; i >= 0 && buffer[i] == 0; i--) {}
 		packet.setLength(i+1);
 		part++;
