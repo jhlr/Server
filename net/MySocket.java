@@ -37,7 +37,7 @@ public class MySocket implements java.io.Closeable {
 
 		this.socket = new DatagramSocket();
 		
-		socket.setSoTimeout(SO_TIMEOUT << 2);
+		socket.setSoTimeout(SO_TIMEOUT << 4);
 		DatagramPacket temp = new DatagramPacket(new byte[2], 1, destAddress);
 		for(int i=0; i<TRY_NUMBER; i++) {
 			if(!random()) { // connection byte may be lost
