@@ -1,9 +1,7 @@
 package main;
 import net.*;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.PrintStream;
+import java.io.*;
 import java.net.InetAddress;
 import java.util.Scanner;
 
