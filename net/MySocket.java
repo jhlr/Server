@@ -11,7 +11,8 @@ import java.net.SocketTimeoutException;
 
 public class MySocket implements java.io.Closeable {
 
-	static public final int SO_TIMEOUT = 5, TRY_NUMBER = 20;	
+	public static boolean DEBUG = false;
+	static public final int SO_TIMEOUT = 2, TRY_NUMBER = 30;	
 	
 	final DatagramSocket socket;
 	final SocketAddress address;
@@ -89,7 +90,7 @@ public class MySocket implements java.io.Closeable {
 	}
 	
 	void unreachable() throws IOException {
-		System.out.println(" canceled.");
+		if(DEBUG) System.out.println(" canceled.");
 		throw new IOException("Unreachable");
 	}
 	
