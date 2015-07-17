@@ -4,7 +4,6 @@ import net.*;
 
 public class Server {
 	public final static int port = 23456, bufferSize = 1025, lossProbability = 50;
-	
 	public static void main(String[] arguments) throws Exception {
 		MyServerSocket welcomeSocket = new MyServerSocket(port, lossProbability, bufferSize);
 		MySocket connectionSocket;
@@ -13,8 +12,7 @@ public class Server {
 				try {
 					connectionSocket = welcomeSocket.accept();
 					
-					System.out.print("Connection accepted: ");
-					System.out.println(connectionSocket.getSocketAddress());
+					System.out.println("Connection accepted: " + connectionSocket.getSocketAddress());
 					
 					HttpRequest request = new HttpRequest(connectionSocket);
 					Thread thread = new Thread(request);
