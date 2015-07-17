@@ -13,9 +13,8 @@ public class Client {
 	public static void main(String[] args) throws Exception {
 		MySocket socket = new MySocket(
 				InetAddress.getByName("localhost"), serverPort, lossProbability, bufferSize);
-
-		System.out.print("Connection accepted: ");
-		System.out.println(socket.getSocketAddress());
+		
+		System.out.println("Connection accepted: " + socket.getSocketAddress());
 		// if a packet takes more to arrive, consider it as lost
 
 		PrintStream serverOut = new PrintStream(socket.getOutputStream());
