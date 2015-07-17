@@ -7,7 +7,7 @@ import java.net.SocketTimeoutException;
 
 
 class SocketOutputStream extends OutputStream {
-
+	
 	private int i;
 	public final int length;
 	private byte part;
@@ -38,10 +38,10 @@ class SocketOutputStream extends OutputStream {
 		int t = 0;
 		if(i == 0){ return; }
 		byte[] buffer = packet.getData();
-		System.out.print("sending..");
+		if(MySocket.DEBUG) System.out.print("sending..");
 		do{
 			try {
-				System.out.print(".");
+				if(MySocket.DEBUG) System.out.print(".");
 				buffer[0] = part; // set header
 				if(!master.random()) {
 					packet.setLength(i+1);
@@ -56,7 +56,7 @@ class SocketOutputStream extends OutputStream {
 				master.unreachable();
 			}
 		}while(buffer[0] < part);
-		System.out.println(" sent: " + (127 + (int) buffer[0]));
+		if(MySocket.DEBUG) System.out.println(" sent: " + (127 + (int) buffer[0]));
 		java.util.Arrays.fill(buffer, (byte) 0);
 		part++;
 		i = 0;
