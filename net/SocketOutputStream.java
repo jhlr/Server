@@ -56,7 +56,7 @@ class SocketOutputStream extends OutputStream {
 				master.unreachable();
 			}
 		}while(buffer[0] < part);
-		System.out.println(" sent: " + (int) buffer[0]);
+		System.out.println(" sent: " + (127 + (int) buffer[0]));
 		java.util.Arrays.fill(buffer, (byte) 0);
 		part++;
 		i = 0;
