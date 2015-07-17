@@ -18,12 +18,18 @@ public class Client {
 
 		PrintStream serverOut = new PrintStream(socket.getOutputStream());
 		Scanner serverIn = new Scanner(socket.getInputStream());
-
-		serverOut.println("abacate "); // send something
-		serverOut.flush(); // force sending, even if the buffer is not full
-		System.out.println(serverIn.nextLine()); // print whatever was received
-
-		socket.close();
-		serverIn.close();
+		Scanner sc = new Scanner(System.in);
+		try {
+			while(sc.hasNextLine()){
+				serverOut.println(sc.nextLine()); // send something
+				serverOut.flush(); // force sending, even if the buffer is not full
+			}
+			socket.setSoTimeout(MySocket.SO_TIMEOUT << 4);
+			System.out.println(serverIn.nextLine()); // print whatever was received
+		} finally {
+			socket.close();
+			sc.close();
+			serverIn.close();
+		}
 	}
 }
