@@ -26,10 +26,11 @@ class SocketInputStream extends InputStream {
 	public int read() throws IOException {
 		byte[] buffer = packet.getData();
 		if(i >= packet.getLength() - 1) {
-			if(part > -127) {
+			try {
+				request();
+			} catch(IOException e) {
 				return -1;
 			}
-			request();
 		}
 		i++;
 		return buffer[i];
@@ -41,8 +42,8 @@ class SocketInputStream extends InputStream {
 		java.util.Arrays.fill(buffer, (byte) 0);
 		System.out.print("receiving..");
 		do{
-			System.out.print(".");
 			try {
+				System.out.print(".");
 				master.socket.receive(packet);
 				// Confirmation
 				if(!master.random()) {
@@ -53,7 +54,9 @@ class SocketInputStream extends InputStream {
 			} catch (SocketTimeoutException e) { // did not receive anything
 				buffer[0] = -128; // continue
 			}
-			master.isConnected(t++);
+			if(t++ > MySocket.TRY_NUMBER) {
+				master.unreachable();
+			}
 		}while(buffer[0] < part); // Maybe the confirmation was not received in a previous packet
 		System.out.println(" received: " + (int) buffer[0]);
 		for(i=length-1; i >= 0 && buffer[i] == 0; i--) {}
