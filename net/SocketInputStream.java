@@ -58,7 +58,7 @@ class SocketInputStream extends InputStream {
 				master.unreachable();
 			}
 		}while(buffer[0] < part); // Maybe the confirmation was not received in a previous packet
-		System.out.println(" received: " + (int) buffer[0]);
+		System.out.println(" received: " + (127 + (int) buffer[0]));
 		for(i=length-1; i >= 0 && buffer[i] == 0; i--) {}
 		packet.setLength(i+1);
 		part++;
