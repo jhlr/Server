@@ -52,7 +52,9 @@ class SocketOutputStream extends OutputStream {
 			} catch(SocketTimeoutException e) { // no confirmation
 				buffer[0] = -128; // continue
 			}
-			master.isConnected(t++);
+			if(t++ > MySocket.TRY_NUMBER){
+				master.unreachable();
+			}
 		}while(buffer[0] < part);
 		System.out.println(" sent: " + (int) buffer[0]);
 		java.util.Arrays.fill(buffer, (byte) 0);
