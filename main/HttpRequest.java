@@ -64,7 +64,7 @@ public class HttpRequest implements Runnable {
 
 		// Get and display the header lines.
 		String headerLine = null;
-		while ((headerLine = br.readLine()).length() != 0) {
+		while ((headerLine = br.readLine()) != null && headerLine.length() != 0) {
 			System.out.println(headerLine);
 		}
 
