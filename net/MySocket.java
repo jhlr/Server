@@ -11,45 +11,53 @@ import java.net.SocketTimeoutException;
 
 public class MySocket implements java.io.Closeable {
 
-	public static boolean DEBUG = false;
-	static public final int SO_TIMEOUT = 2, TRY_NUMBER = 30;	
+	public static boolean DEBUG = false; // shows connection messages
+	
+	/* TRY_NUMBER = number of times to send again before considering the packet as lost
+	** SO_TIMEOUT = miliseconds to wait for packet confirmation
+	*/ static public int SO_TIMEOUT = 2, TRY_NUMBER = 30;
 	
 	final DatagramSocket socket;
 	final SocketAddress address;
-	private final int probability, bufferSize;
+	private final int lossProbability, bufferSize;
 
 	private final InputStream in;
 	private final OutputStream out;
 
-	public MySocket(InetAddress destAddress, int destPort, int probability, int bufferSize) 
+	public MySocket(InetAddress destAddress, int destPort, int lossProbability, int bufferSize) 
 			throws SocketException, IOException {
-		this(new InetSocketAddress(destAddress, destPort), probability, bufferSize, true);
+		this(new InetSocketAddress(destAddress, destPort), lossProbability, bufferSize, true);
 	}
 	
-	public MySocket(SocketAddress destAddress, int probability, int bufferSize) 
+	public MySocket(SocketAddress destAddress, int lossProbability, int bufferSize) 
 			throws SocketException, IOException{
-		this(destAddress, probability, bufferSize, true);
+		this(destAddress, lossProbability, bufferSize, true);
 	}
 	
-	MySocket(SocketAddress destAddress, int probability, int bufferSize, boolean receive)
+	MySocket(SocketAddress destAddress, int lossProbability, int bufferSize, boolean receive)
 			throws SocketException, IOException {
 		this.bufferSize = bufferSize;
-		this.probability = probability;
+		this.lossProbability = lossProbability;
 
-		this.socket = new DatagramSocket();
+		socket = new DatagramSocket(); // get an available port
 		
-		socket.setSoTimeout(SO_TIMEOUT << 4);
+		/* give more time for the handshake
+		** avoids multiple connections to the server
+		*/ socket.setSoTimeout(SO_TIMEOUT << 4);
 		DatagramPacket temp = new DatagramPacket(new byte[2], 1, destAddress);
 		for(int i=0; i<TRY_NUMBER; i++) {
-			if(!random()) { // connection byte may be lost
-				socket.send(temp);			
+			if(!random()) { // handshake byte may be lost
+				// send a byte from the newly created port		
+				socket.send(temp); 
 			}
 			try {
-				if(receive) {
-					socket.receive(temp);	
+				if(receive) { 
+					// this will not happen if it was created from the ServerSocket
+					socket.receive(temp);
 					destAddress = temp.getSocketAddress();	
 				}
-				i = TRY_NUMBER;
+				i = TRY_NUMBER; 
+				// break, the connection was successful
 			} catch (SocketTimeoutException e) {}
 		}
 		socket.setSoTimeout(SO_TIMEOUT);
@@ -60,6 +68,7 @@ public class MySocket implements java.io.Closeable {
 	}
 	
 	public void setSoTimeout(int time) throws SocketException {
+		// different from SO_TIMEOUT
 		socket.setSoTimeout(time);
 	}
 
@@ -70,7 +79,7 @@ public class MySocket implements java.io.Closeable {
 
 	boolean random() {
 		int rand = new java.util.Random().nextInt(100);
-		return rand < this.probability;
+		return rand < this.lossProbability;
 	}
 	
 	public SocketAddress getSocketAddress() {
@@ -99,5 +108,4 @@ public class MySocket implements java.io.Closeable {
 		close();
 		super.finalize();
 	}
-
 }
